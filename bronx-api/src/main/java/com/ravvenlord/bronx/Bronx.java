@@ -1,5 +1,6 @@
 package com.ravvenlord.bronx;
 
+import com.ravvenlord.bronx.mail.MailBoxCache;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicesManager;
 
@@ -8,4 +9,12 @@ import org.bukkit.plugin.ServicesManager;
  * from the spigot {@link ServicesManager}
  */
 public interface Bronx extends Plugin {
+
+    /**
+     * Returns the {@link MailBoxCache} instance of the bronx plugin. This instance will never be null.
+     *
+     * @return the {@link MailBoxCache} instance.
+     */
+    MailBoxCache getMailBoxCache();
+
 }
