@@ -2,6 +2,7 @@ package com.ravvenlord.bronx.plugin.mail.session;
 
 import com.ravvenlord.bronx.mail.session.MailBoxSession;
 import com.ravvenlord.bronx.mail.session.ModificationAction;
+import org.apache.commons.lang.Validate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +23,7 @@ public class BronxMailBoxSession implements MailBoxSession {
      */
     @Override
     public void recordChange(long id, ModificationAction action) {
+        Validate.notNull(action, "The passed ModificationAction is null and cannot be recorded");
         switch (action) {
             case CREATE:
                 this.actionMap.put(id, ModificationAction.CREATE);
@@ -30,8 +32,6 @@ public class BronxMailBoxSession implements MailBoxSession {
                 if (this.actionMap.get(id) == ModificationAction.CREATE) this.actionMap.remove(id);
                 else this.actionMap.put(id, ModificationAction.DELETE);
                 break;
-            default:
-                throw new IllegalArgumentException(String.format("Could not record action %s", action.name()));
         }
     }
 

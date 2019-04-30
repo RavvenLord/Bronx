@@ -20,14 +20,28 @@ public class BronxMailBoxSessionTest {
     }
 
     @Test
-    public void recordChange() {
+    public void recordCreateChange() {
         this.session.recordChange(0, ModificationAction.CREATE);
-
-        assertEquals(this.session.log(), of(0L, ModificationAction.CREATE));
+        assertEquals(of(0L, ModificationAction.CREATE), this.session.log());
     }
 
     @Test
-    public void log() {
+    public void recordDeleteChange() {
+        this.session.recordChange(1, ModificationAction.DELETE);
+        assertEquals(of(1L, ModificationAction.DELETE), this.session.log());
+    }
+
+    @Test
+    public void recordNoneChangeChange() {
+        this.session.recordChange(0, ModificationAction.CREATE);
+        this.session.recordChange(0, ModificationAction.DELETE);
+
+        assertEquals(0, this.session.log().size());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void recordNullChange() {
+        this.session.recordChange(1, null);
     }
 
     private <K, V> Map<K, V> of(K k, V v) {
