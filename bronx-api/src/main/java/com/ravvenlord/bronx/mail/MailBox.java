@@ -1,5 +1,7 @@
 package com.ravvenlord.bronx.mail;
 
+import com.ravvenlord.bronx.mail.session.MailBoxSession;
+
 import java.util.Map;
 
 /**
@@ -43,4 +45,11 @@ public interface MailBox {
      * @return if there was a mail instance that matched this id.
      */
     boolean remove(long id);
+
+    /**
+     * Returns the {@link MailBoxSession} instance of this {@link MailBox}.
+     *
+     * @return the mail box session
+     */
+    MailBoxSession getSession();
 }

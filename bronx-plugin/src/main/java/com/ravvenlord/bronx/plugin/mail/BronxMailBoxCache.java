@@ -1,14 +1,30 @@
-package com.ravvenlord.bronx.mail;
+package com.ravvenlord.bronx.plugin.mail;
 
+import com.ravvenlord.bronx.mail.MailBox;
+import com.ravvenlord.bronx.mail.MailBoxCache;
+import com.ravvenlord.bronx.storage.MailBoxStorage;
+
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
-/**
- * The mail box provider instance simply represents the mail box cache that stores the mail boxes of players.
- */
-public interface MailBoxCache {
+public class BronxMailBoxCache implements MailBoxCache {
+
+    private Map<UUID, CompletableFuture<MailBox>> cache;
+    private MailBoxStorage storage;
+
+    /**
+     * Creates a new {@link BronxMailBoxCache}
+     *
+     * @param cache the cache map implementation
+     * @param storage the storage provider
+     */
+    public BronxMailBoxCache(Map<UUID, CompletableFuture<MailBox>> cache, MailBoxStorage storage) {
+        this.cache = cache;
+        this.storage = storage;
+    }
 
     /**
      * Returns the promise of an existing mail box instance for the given player. The returned {@link CompletableFuture}
@@ -21,7 +37,10 @@ public interface MailBoxCache {
      *
      * @return the future of the players mail box
      */
-    CompletableFuture<MailBox> getBox(UUID player);
+    @Override
+    public CompletableFuture<MailBox> getBox(UUID player) {
+        return this.cache.computeIfAbsent(player, uuid -> this.storage.pull(player));
+    }
 
     /**
      * Clears the {@link MailBoxCache} content. Clearing this cache will promise that all data that is cleared has
@@ -33,7 +52,19 @@ public interface MailBoxCache {
      *
      * @param predicate the predicate.
      */
-    void clearCache(BiPredicate<UUID, MailBox> predicate);
+    @Override
+    public void clearCache(BiPredicate<UUID, MailBox> predicate) {
+        this.cache.entrySet().removeIf(e -> {
+            UUID owner = e.getKey();
+            CompletableFuture<MailBox> box = e.getValue();
+
+            if (box.isDone() && predicate.test(owner, box.join())) {
+                this.storage.push(owner, box.join());
+                return true;
+            }
+            return false;
+        });
+    }
 
     /**
      * Accepts the given consumer for each {@link CompletableFuture} instance in the cache. This consumer will include
@@ -41,19 +72,8 @@ public interface MailBoxCache {
      *
      * @param consumer the consumer instance
      */
-    void forEachFuture(Consumer<CompletableFuture<MailBox>> consumer);
-
-    /**
-     * Accepts the given consumer for each {@link MailBox} instance that is available in this cache.
-     * <p>
-     * This method will not accept {@link MailBox} instances that are scheduled in {@link CompletableFuture}s but have
-     * not been completely loaded yet.
-     *
-     * @param consumer the consumer instance,
-     */
-    default void forEach(Consumer<MailBox> consumer) {
-        forEachFuture(future -> {
-            if (future.isDone()) consumer.accept(future.join());
-        });
+    @Override
+    public void forEachFuture(Consumer<CompletableFuture<MailBox>> consumer) {
+        this.cache.values().forEach(consumer);
     }
 }
