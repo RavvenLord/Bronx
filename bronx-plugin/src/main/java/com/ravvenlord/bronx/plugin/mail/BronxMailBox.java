@@ -3,6 +3,7 @@ package com.ravvenlord.bronx.plugin.mail;
 import com.ravvenlord.bronx.mail.MailBox;
 import com.ravvenlord.bronx.mail.MailData;
 import com.ravvenlord.bronx.mail.session.MailBoxSession;
+import com.ravvenlord.bronx.mail.session.ModificationAction;
 import com.ravvenlord.bronx.storage.MailIDSupplier;
 import org.apache.commons.lang.Validate;
 
@@ -66,6 +67,7 @@ public class BronxMailBox implements MailBox {
 
         long newID = this.idSupplier.fetch();
         this.map.put(newID, data);
+        this.getSession().recordChange(newID, ModificationAction.CREATE);
         return newID;
     }
 
@@ -78,7 +80,11 @@ public class BronxMailBox implements MailBox {
      */
     @Override
     public boolean remove(long id) {
-        return this.map.remove(id) != null;
+        if (this.map.remove(id) != null) {
+            this.getSession().recordChange(id, ModificationAction.DELETE);
+            return true;
+        }
+        return false;
     }
 
     /**

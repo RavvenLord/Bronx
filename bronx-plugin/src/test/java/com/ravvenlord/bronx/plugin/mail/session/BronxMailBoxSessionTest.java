@@ -44,6 +44,17 @@ public class BronxMailBoxSessionTest {
         this.session.recordChange(1, null);
     }
 
+    @Test
+    public void log() {
+        Map<Long, ModificationAction> map = new HashMap<>();
+        map.put(0L, ModificationAction.CREATE);
+        map.put(5L, ModificationAction.DELETE);
+
+        this.session = new BronxMailBoxSession(map);
+
+        assertEquals(map, this.session.log());
+    }
+
     private <K, V> Map<K, V> of(K k, V v) {
         Map<K, V> map = new HashMap<>();
         map.put(k, v);
